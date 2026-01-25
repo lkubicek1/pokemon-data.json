@@ -1,6 +1,12 @@
+export interface ItemName {
+  english: string;
+  japanese: string;
+  chinese: string;
+}
+
 export interface Item {
   id: number;
-  ename: string;
+  name: ItemName;
   type: string;
   description: string;
 }

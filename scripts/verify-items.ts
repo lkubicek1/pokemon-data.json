@@ -6,7 +6,8 @@ const repoRoot = resolve(import.meta.dir, '..');
 const itemsPath = join(repoRoot, 'items.json');
 const outputPath = join(repoRoot, 'scripts/items-validation.json');
 
-const REQUIRED_ITEM_KEYS = ['id', 'ename', 'type', 'description'] as const;
+const REQUIRED_ITEM_KEYS = ['id', 'name', 'type', 'description'] as const;
+const REQUIRED_NAME_KEYS = ['english', 'japanese', 'chinese'] as const;
 
 function readJson<T>(filePath: string): T {
   return JSON.parse(readFileSync(filePath, 'utf-8'));
@@ -43,10 +44,17 @@ function validateItem(item: unknown): string[] {
     }
   }
 
-  // Check ename
-  if (!('ename' in i) || !isNonEmptyString(i.ename)) {
-    if (!missingKeys.includes('ename')) {
-      missingKeys.push('ename');
+  // Check name object and its required keys
+  if (!('name' in i) || !i.name || typeof i.name !== 'object' || i.name === null) {
+    if (!missingKeys.includes('name')) {
+      missingKeys.push('name');
+    }
+  } else {
+    const name = i.name as Record<string, unknown>;
+    for (const key of REQUIRED_NAME_KEYS) {
+      if (!(key in name) || !isNonEmptyString(name[key])) {
+        missingKeys.push(`name.${key}`);
+      }
     }
   }
 
@@ -81,12 +89,15 @@ function main(): void {
   for (const item of items) {
     const missingKeys = validateItem(item);
     if (missingKeys.length > 0) {
+      const itemName = typeof item === 'object' && item !== null && 'name' in item &&
+        typeof item.name === 'object' && item.name !== null && 'english' in item.name &&
+        typeof item.name.english === 'string' ? item.name.english : undefined;
+
       failures.push({
         id: typeof item === 'object' && item !== null && 'id' in item && typeof item.id === 'number'
           ? item.id
           : 'unknown',
-        name: typeof item === 'object' && item !== null && 'ename' in item &&
-          typeof item.ename === 'string' ? item.ename : undefined,
+        name: itemName,
         missingKeys,
       });
     }
