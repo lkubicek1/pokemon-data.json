@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { resolve, join } from 'path';
-import type { Move } from './types.js';
+import type { Move } from '../types/moves.ts';
 
 const repoRoot = resolve(import.meta.dir, '..');
 const movesPath = join(repoRoot, 'moves.json');
